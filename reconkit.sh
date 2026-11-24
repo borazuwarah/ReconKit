@@ -4,9 +4,18 @@
 # Uso: ./reconkit.sh [opciones] <comando> [argumentos]    (usa -h para ver la ayuda)
 #
 #
-# Ultima Versión         1.0.0
+# Ultima Versión         1.1.0
 #
 # Historial de versiones (la más reciente arriba):
+#
+#    1.1.0 (2026-11-24) Nuevo módulo lib/discover.sh: comando 'discover <objetivo>...' para descubrir
+#                       hosts activos en una IPv4, una red CIDR (hasta /16) o un nombre de host.
+#                       Todos los objetivos se comprueban contra el ámbito ANTES de enviar nada; si
+#                       alguno está fuera, no se sondea ninguno. Se hace ping a cada IP: si responde se
+#                       muestra como host activo y, por el TTL de la respuesta, se estima el sistema
+#                       operativo (<= 64 Linux/Unix, 65-128 Windows, > 128 equipo de red). Opciones -t
+#                       (timeout), -j (pings en paralelo) y -o (guarda las IPs activas para fases
+#                       siguientes). Ayuda actualizada y nuevo fichero de pruebas tests/test_discover.sh.
 #
 #    1.0.0 (2026-11-23) Primera versión. Estructura base del proyecto: punto de entrada con menú de ayuda
 #                       (-h / --help) y versión (-v / --version), colores y formato de salida comunes
@@ -15,11 +24,12 @@
 #                       de host y comodín '*.dominio'. Los objetivos se validan y sin ámbito no se actúa.
 #                       Los comandos discover, scan, web y report están reservados para próximas versiones.
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 . "$SCRIPT_DIR/lib/common.sh" || { echo "No se pudo cargar lib/common.sh" >&2; exit 1; }
 . "$SCRIPT_DIR/lib/scope.sh"  || { echo "No se pudo cargar lib/scope.sh" >&2; exit 1; }
+. "$SCRIPT_DIR/lib/discover.sh" || { echo "No se pudo cargar lib/discover.sh" >&2; exit 1; }
 
 SCOPE_FILE=${RECONKIT_SCOPE:-./scope.txt}
 
@@ -37,12 +47,14 @@ uso() {
     echo -e "  ${blueColour}-v, --version${endColour}        ${grayColour}Muestra la versión y sale.${endColour}"
     echo
     echo -e "${yellowColour}Comandos:${endColour}"
-    echo -e "  ${blueColour}scope list${endColour}              ${grayColour}Muestra las entradas del ámbito autorizado.${endColour}"
-    echo -e "  ${blueColour}scope check <objetivo>${endColour}  ${grayColour}Comprueba si una IP, host o red está dentro del ámbito.${endColour}"
-    echo -e "  ${blueColour}discover${endColour}                ${grayColour}(próximamente) Descubrimiento de hosts activos.${endColour}"
-    echo -e "  ${blueColour}scan${endColour}                    ${grayColour}(próximamente) Escaneo de puertos y banners.${endColour}"
-    echo -e "  ${blueColour}web${endColour}                     ${grayColour}(próximamente) Reconocimiento web.${endColour}"
-    echo -e "  ${blueColour}report${endColour}                  ${grayColour}(próximamente) Informe en Markdown.${endColour}"
+    echo -e "  ${blueColour}scope list${endColour}                  ${grayColour}Muestra las entradas del ámbito autorizado.${endColour}"
+    echo -e "  ${blueColour}scope check <objetivo>${endColour}      ${grayColour}Comprueba si una IP, host o red está dentro del ámbito.${endColour}"
+    echo -e "  ${blueColour}discover [opc] <objetivo>${endColour}   ${grayColour}Descubre hosts activos con ping (IP, red CIDR hasta /16 o host)${endColour}"
+    echo -e "                              ${grayColour}y estima el sistema operativo por el TTL (Linux/Windows).${endColour}"
+    echo -e "                              ${grayColour}Opciones: -t segundos, -j paralelo, -o fichero. Más en 'discover --help'.${endColour}"
+    echo -e "  ${blueColour}scan${endColour}                        ${grayColour}(próximamente) Escaneo de puertos y banners.${endColour}"
+    echo -e "  ${blueColour}web${endColour}                         ${grayColour}(próximamente) Reconocimiento web.${endColour}"
+    echo -e "  ${blueColour}report${endColour}                      ${grayColour}(próximamente) Informe en Markdown.${endColour}"
     echo
     echo -e "${yellowColour}Formato del fichero de ámbito${endColour} ${grayColour}(una entrada por línea, # para comentarios):${endColour}"
     echo -e "  ${grayColour}192.168.1.50         IPv4 exacta${endColour}"
@@ -53,6 +65,8 @@ uso() {
     echo -e "${yellowColour}Ejemplos:${endColour}"
     echo -e "  ${grayColour}./reconkit.sh scope list${endColour}"
     echo -e "  ${grayColour}./reconkit.sh -s mi_ambito.txt scope check 192.168.1.50${endColour}"
+    echo -e "  ${grayColour}./reconkit.sh discover 192.168.1.0/24${endColour}"
+    echo -e "  ${grayColour}./reconkit.sh discover -o activos.txt 192.168.1.0/24${endColour}"
     echo
     aviso_legal
 }
@@ -78,7 +92,9 @@ COMANDO=${1:-}
 case $COMANDO in
     scope)
         cmd_scope "$@"; exit $?;;
-    discover|scan|web|report)
+    discover)
+        cmd_discover "$@"; exit $?;;
+    scan|web|report)
         msg_warn "El comando '$COMANDO' todavía no está implementado (llegará en próximas versiones)."
         exit 3;;
     "")
