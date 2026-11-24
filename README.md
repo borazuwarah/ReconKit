@@ -22,17 +22,20 @@ Se construye por fases y con versiones: cada una añade un módulo y mantiene el
 Los próximos módulos llegarán en futuras actualizaciones, cada uno como un fichero nuevo en `lib/`
 y con su versión en el historial. Todos pasarán primero por el control de ámbito.
 
-**Previstos:**
+| Versión | Módulo | Tipo | Descripción | Depende de | Estado |
+|---|---|---|---|---|---|
+| 1.0.0 | `scope` | Núcleo | Ayuda, versión y gestión del ámbito autorizado (IPv4, redes CIDR, hosts y comodín) | — | ✅ Hecho |
+| 1.1.0 | `discover` | Núcleo | Hosts activos de una red (ping y tabla ARP) | `scope` | 🔧 En curso (ping y SO por TTL hechos; falta la tabla ARP) |
+| 1.2.0 | `scan` | Núcleo | Puertos TCP abiertos y captura de banners para identificar servicios | `discover` | ⏳ Planificado |
+| 1.3.0 | `web` | Núcleo | Cabeceras de seguridad, robots.txt, tecnologías visibles, archivos expuestos (`.git/`, `.env`, `/backup`) y flags de las cookies | `scan` | ⏳ Planificado |
+| 1.4.0 | `report` | Núcleo | Informe en Markdown con hosts, puertos, servicios y hallazgos ordenados por gravedad | `discover`, `scan`, `web` | ⏳ Planificado |
+| Sin asignar | `tls` | Especializado | Revisa certificados (caducidad, protocolos y cifrados débiles) con openssl | `scan` | 💡 Idea |
+| Sin asignar | `dns` | Especializado | Enumeración de subdominios con diccionario y consultas dig; comprobación de transferencias de zona en dominios propios | `scope` | 💡 Idea |
+| Sin asignar | `dirs` | Especializado | Descubrimiento de rutas web con diccionario, límite de velocidad y filtro por código HTTP | `web` | 💡 Idea |
+| Sin asignar | `diff` | Especializado | Compara dos ejecuciones: hosts o puertos que aparecen o desaparecen | `report` | 💡 Idea |
 
-- `scan`: escaneo de puertos y captura de banners de los hosts encontrados con `discover`.
-- `web`: reconocimiento básico de los servicios web (cabeceras, tecnologías, títulos).
-- `report`: informe final en Markdown con los resultados de todas las fases.
-
-**Posibles más adelante:**
-
-- `dns`: enumeración DNS (registros, subdominios del ámbito).
-- `dirs`: descubrimiento de directorios y ficheros en servidores web.
-- `tls`: revisión de certificados y configuración TLS (caducidad, protocolos, cifrados).
+- **Núcleo:** fases principales del reconocimiento, en este orden.
+- **Especializado:** módulos opcionales que amplían una fase concreta.
 
 ## Instalación
 
