@@ -1,4 +1,4 @@
-# reconkit 
+# Reconkit Framework
 
 Mini framework de reconocimiento para **pruebas de seguridad autorizadas**, escrito en shell.
 Se construye por fases y con versiones: cada una añade un módulo y mantiene el historial en la cabecera de `reconkit.sh`.
