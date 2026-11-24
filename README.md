@@ -17,14 +17,40 @@ Se construye por fases y con versiones: cada una añade un módulo y mantiene el
 | `web` (reconocimiento web) | ⏳ Planificado |
 | `report` (informe Markdown) | ⏳ Planificado |
 
+## Hoja de ruta
+
+Los próximos módulos llegarán en futuras actualizaciones, cada uno como un fichero nuevo en `lib/`
+y con su versión en el historial. Todos pasarán primero por el control de ámbito.
+
+**Previstos:**
+
+- `scan`: escaneo de puertos y captura de banners de los hosts encontrados con `discover`.
+- `web`: reconocimiento básico de los servicios web (cabeceras, tecnologías, títulos).
+- `report`: informe final en Markdown con los resultados de todas las fases.
+
+**Posibles más adelante:**
+
+- `dns`: enumeración DNS (registros, subdominios del ámbito).
+- `dirs`: descubrimiento de directorios y ficheros en servidores web.
+- `tls`: revisión de certificados y configuración TLS (caducidad, protocolos, cifrados).
+
+## Instalación
+
+```bash
+git clone https://github.com/borazuwarah/ReconKit.git
+cd ReconKit
+chmod +x reconkit.sh
+cp scope.txt.example scope.txt     # y edítalo con tus objetivos autorizados
+```
+
 ## Idea clave: el ámbito (scope) es obligatorio
 
 reconkit se niega a actuar sobre cualquier objetivo que no esté en tu fichero de ámbito.
 Sin ámbito, o con un ámbito vacío, no hace nada.
 
-```bash
-cp scope.txt.example scope.txt     # y edítalo con tus objetivos autorizados
-```
+Tu ámbito real va en `scope.txt`, que está en `.gitignore` para que no se suba al repositorio.
+`scope.txt.example` es solo la plantilla. `./scope.txt` se busca en la carpeta desde la que lanzas
+el comando; para usar otro fichero, indica `-s FICHERO` o la variable `RECONKIT_SCOPE`.
 
 Formato (una entrada por línea, `#` para comentarios):
 
@@ -48,6 +74,8 @@ objetivo.lab.local       # nombre de host
 ./reconkit.sh discover --help                 # opciones de discover
 ```
 
+Las opciones globales (`-s`, `-h`, `-v`) van antes del comando; las de cada comando, después.
+
 ### discover
 
 Acepta una o varias IPv4, redes CIDR (hasta `/16`) o nombres de host. **Todos** los objetivos se
@@ -57,9 +85,10 @@ Hace ping a cada IP. Si responde, la marca como host activo y estima el sistema 
 de la respuesta (cada router intermedio lo reduce en 1, por eso se usan rangos):
 
 ```
-[+] Host activo : 192.168.140.1    TTL 255  -> Equipo de red
-[+] Host activo : 192.168.140.108  TTL 64   -> Linux/Unix
-[+] Host activo : 192.168.140.111  TTL 128  -> Windows
+[+] Host activo : 192.168.56.1     TTL 255  -> Equipo de red
+[+] Host activo : 192.168.56.10    TTL 64   -> Linux/Unix
+[+] Host activo : 192.168.56.20    TTL 128  -> Windows
+[+] 3 de 254 host(s) activo(s) en 9s
 ```
 
 | TTL | Sistema estimado |
@@ -76,13 +105,11 @@ Es una estimación: el TTL se puede cambiar, y un host que bloquee ICMP no apare
 | `-j, --hilos` | Pings en paralelo, 1-128 (por defecto 32). |
 | `-o, --salida` | Guarda las IPs activas, una por línea (útil para la fase `scan`). |
 
-`-s FICHERO` (o la variable `RECONKIT_SCOPE`) indica otro fichero de ámbito; por defecto `./scope.txt`.
-
 ### Códigos de salida
 
 | Código | Significado |
 |---|---|
-| `0` | Correcto / objetivo dentro del ámbito |
+| `0` | Correcto / objetivo dentro del ámbito / `discover` terminado (aunque no responda ningún host) |
 | `1` | Objetivo fuera del ámbito |
 | `2` | Error de uso, fichero de ámbito ausente o vacío, objetivo no válido, red demasiado amplia |
 | `3` | Comando reservado, todavía no implementado |
@@ -99,8 +126,11 @@ reconkit/
 ├── tests/
 │   ├── test_scope.sh    # pruebas del ámbito
 │   └── test_discover.sh # pruebas de discover (solo 127.0.0.0/8)
-├── scope.txt.example
-└── .gitattributes       # fuerza saltos de línea LF en los scripts
+├── scope.txt.example    # plantilla del ámbito
+├── scope.txt            # tu ámbito real (local, no se sube: está en .gitignore)
+├── .gitignore
+├── .gitattributes       # fuerza saltos de línea LF en los scripts
+└── LICENSE
 ```
 
 ## Pruebas
@@ -113,12 +143,22 @@ sh tests/test_discover.sh
 ## Requisitos y notas
 
 - Necesita **bash** (la salida usa `echo -e` y secuencias `\e`) y utilidades estándar: `awk`, `sed`, `grep`, `tr`.
-  `discover` usa además `ping` y `getent`; requiere bash ≥ 4.3 (`wait -n`).
-  En Windows funciona con WSL o Git Bash.
+  `discover` usa además `ping` y `getent`, y requiere bash ≥ 4.3 (`wait -n`).
+- Pensado para **Linux**. En Windows usa WSL: el `ping` de Windows (el que usa Git Bash) tiene
+  otras opciones y `discover` no funcionará con él. En macOS la opción `-W` de `ping` va en milisegundos.
 - Si editas en Windows, guarda los `.sh` con saltos de línea **LF** (el `.gitattributes` ya lo fuerza en Git).
 - Los objetivos se validan antes de usarse: solo se admiten letras, números y `. _ : / -`.
 - IPv6 aún no está soportado en redes CIDR (las direcciones se comparan como texto).
 
+## Historial de versiones
+
+| Versión | Fecha | Cambios |
+|---|---|---|
+| 1.1.0 | 2026-11-24 | Módulo `discover`: hosts activos por ping y sistema operativo estimado por TTL. |
+| 1.0.0 | 2026-11-23 | Núcleo: menú de ayuda, colores comunes y gestión del ámbito (`scope list` / `scope check`). |
+
+El detalle de cada versión está en la cabecera de `reconkit.sh`.
+
 ## Licencia
 
-MIT
+MIT, ver [LICENSE](LICENSE).
