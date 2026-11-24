@@ -1,0 +1,7 @@
+# Ámbito autorizado de reconkit. Copia este fichero como scope.txt y edítalo.
+# Una entrada por línea. Todo lo que no esté aquí, reconkit se niega a tocarlo.
+
+#127.0.0.1                # equipo local
+#192.168.56.0/24          # red del laboratorio
+#objetivo.lab.local       # host concreto
+#*.lab.local              # cualquier subdominio de lab.local
