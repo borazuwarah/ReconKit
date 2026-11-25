@@ -27,7 +27,7 @@ y con su versión en el historial. Todos pasarán primero por el control de ámb
 | 1.0.0 | `scope` | Núcleo | Ayuda, versión y gestión del ámbito autorizado (IPv4, redes CIDR, hosts y comodín) | — | ✅ Hecho |
 | 1.1.0 | `discover` | Núcleo | Hosts activos de una red (ping y tabla ARP) | `scope` | 🔧 En curso (ping y SO por TTL hechos; falta la tabla ARP) |
 | 1.2.0 | `scan` | Núcleo | Puertos TCP abiertos y captura de banners para identificar servicios | `discover` | ⏳ Planificado |
-| 1.3.0 | `web` | Núcleo | Cabeceras de seguridad, robots.txt, tecnologías visibles, archivos expuestos (`.git/`, `.env`, `/backup`) y flags de las cookies | `scan` | ⏳ Planificado |
+| 1.3.0 | `web` | Núcleo | Cabeceras de seguridad, robots.txt, tecnologías visibles(whatweb, nikto), archivos expuestos (`.git/`, `.env`, `/backup`) y flags de las cookies | `scan` | ⏳ Planificado |
 | 1.4.0 | `report` | Núcleo | Informe en Markdown con hosts, puertos, servicios y hallazgos ordenados por gravedad | `discover`, `scan`, `web` | ⏳ Planificado |
 | Sin asignar | `tls` | Especializado | Revisa certificados (caducidad, protocolos y cifrados débiles) con openssl | `scan` | 💡 Idea |
 | Sin asignar | `dns` | Especializado | Enumeración de subdominios con diccionario y consultas dig; comprobación de transferencias de zona en dominios propios | `scope` | 💡 Idea |
